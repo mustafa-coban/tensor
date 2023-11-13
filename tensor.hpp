@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <vector>
 #include <fstream>
+#include <cassert>
 
 
 template<class T>
@@ -60,6 +61,8 @@ public:
     ComponentType &
     operator()(const std::vector<size_t> &idx);
 
+    bool checkEqual(const Tensor<ComponentType> &other) const;
+
     // Element access function
     const ComponentType &
     operator[](const size_t &idx) const;
@@ -67,8 +70,6 @@ public:
     // Element mutation function
     ComponentType &
     operator[](const size_t &idx);
-
-    bool checkEqual(const Tensor<ComponentType> &other) const;
 
 private:
     std::vector<size_t> _shape;
@@ -79,25 +80,6 @@ private:
 
     void _fillIndexing();
 };
-
-template<Arithmetic ComponentType>
-void Tensor<ComponentType>::_fillIndexing() {
-    for (auto cur = _indexing.rbegin(), next = _indexing.rbegin() + 1; next != _indexing.rend(); ++cur, ++next) {
-        *next *= *cur;
-    }
-    std::rotate(_indexing.begin(), _indexing.begin() + 1, _indexing.end());
-    _indexing.back() = 1;
-}
-
-template<Arithmetic ComponentType>
-ComponentType &Tensor<ComponentType>::operator[](const size_t &idx) {
-    return _data[idx];
-}
-
-template<Arithmetic ComponentType>
-const ComponentType &Tensor<ComponentType>::operator[](const size_t &idx) const {
-    return _data[idx];
-}
 
 template<Arithmetic ComponentType>
 Tensor<ComponentType>::Tensor(const std::vector<size_t> &shape, const std::vector<ComponentType> &data): _shape(
@@ -121,15 +103,6 @@ bool Tensor<ComponentType>::checkEqual(const Tensor<ComponentType> &other) const
     return true;
 }
 
-template<Arithmetic ComponentType>
-size_t Tensor<ComponentType>::_calculateIndex(const std::vector<size_t> &idx) const {
-    size_t index = 0;
-    for (auto currentIndex = idx.begin(), multiplier = _indexing.begin();
-         currentIndex != idx.end() && multiplier != _indexing.end(); ++currentIndex, ++multiplier) {
-        index += *currentIndex * *multiplier;
-    }
-    return index;
-}
 
 template<Arithmetic ComponentType>
 Tensor<ComponentType>::Tensor() : _shape(1, 0), _data(1, 0), _indexing(1, 0) {
@@ -212,15 +185,44 @@ size_t Tensor<ComponentType>::numElements() const {
 
 template<Arithmetic ComponentType>
 const ComponentType &Tensor<ComponentType>::operator()(const std::vector<size_t> &idx) const {
+    assert(idx.size() == _shape.size() || (idx.empty() && _shape[0] == 0));
     return _data[_calculateIndex(idx)];
 }
 
 template<Arithmetic ComponentType>
 ComponentType &Tensor<ComponentType>::operator()(const std::vector<size_t> &idx) {
+    assert(idx.size() == _shape.size() || (idx.empty() && _shape[0] == 0));
     return _data[_calculateIndex(idx)];
 }
 
+template<Arithmetic ComponentType>
+ComponentType &Tensor<ComponentType>::operator[](const size_t &idx) {
+    return _data[idx];
+}
 
+template<Arithmetic ComponentType>
+const ComponentType &Tensor<ComponentType>::operator[](const size_t &idx) const {
+    return _data[idx];
+}
+
+template<Arithmetic ComponentType>
+size_t Tensor<ComponentType>::_calculateIndex(const std::vector<size_t> &idx) const {
+    size_t index = 0;
+    for (auto currentIndex = idx.begin(), multiplier = _indexing.begin();
+         currentIndex != idx.end() && multiplier != _indexing.end(); ++currentIndex, ++multiplier) {
+        index += *currentIndex * *multiplier;
+    }
+    return index;
+}
+
+template<Arithmetic ComponentType>
+void Tensor<ComponentType>::_fillIndexing() {
+    for (auto cur = _indexing.rbegin(), next = _indexing.rbegin() + 1; next != _indexing.rend(); ++cur, ++next) {
+        *next *= *cur;
+    }
+    std::rotate(_indexing.begin(), _indexing.begin() + 1, _indexing.end());
+    _indexing.back() = 1;
+}
 
 // Returns true if the shapes and all elements of both tensors are equal.
 template<Arithmetic ComponentType>
@@ -234,8 +236,67 @@ template<Arithmetic ComponentType>
 std::ostream &
 operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
     // TODO (optional): Implement some nice stdout printer for debugging/exercise.
-    int a = tensor.rank();
-    out << a;
+    std::vector<size_t> traverse(tensor.rank(), 0);
+    std::vector<size_t> shape = tensor.shape();
+
+    if (tensor.rank() == 0) {
+        return out;
+    }
+
+    if (tensor.rank() == 1) {
+        for (size_t i = 0; i < shape.front(); ++i) {
+            out << tensor[i] << " ";
+        }
+        out << std::endl;
+        return out;
+    }
+
+    if (tensor.rank() == 2) {
+        for (size_t row = 0; row < shape.front(); ++row) {
+            for (size_t col = 0; col < shape.back(); ++col) {
+                out << tensor({row, col}) << " ";
+            }
+            out << std::endl;
+        }
+        return out;
+    }
+
+    while (traverse.front() < shape.front()) {
+        const size_t startIndex = shape.size() - 3;
+        std::string deliminator(shape.back() * 2, '=');
+        // print matrix of tensor part with info
+        // info is indexes before last two
+        out << deliminator << std::endl;
+        out << "{ ";
+        for (size_t i = 0; i <= startIndex; ++i) {
+            out << traverse[i] << " ";
+        }
+        out << "}" << std::endl;
+        //matrix
+        for (size_t row = 0; row < shape.front(); ++row) {
+            for (size_t col = 0; col < shape.back(); ++col) {
+                traverse.back() = col;
+                traverse[traverse.size()-2] = row;
+                out << tensor(traverse) << " ";
+            }
+            out << std::endl;
+        }
+
+        out << deliminator << std::endl;
+
+        for (size_t last = startIndex; last <= startIndex;) {
+            traverse[last]++;
+            if (traverse[last] != shape[last]) {
+                break;
+            }
+
+            if (last == 0) {
+                break;
+            }
+            traverse[last] = 0;
+            last--;
+        }
+    }
     return out;
 }
 
