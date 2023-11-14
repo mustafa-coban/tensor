@@ -7,6 +7,7 @@
 #include <vector>
 #include <fstream>
 #include <cassert>
+#include <numeric>
 
 
 template<class T>
@@ -207,11 +208,7 @@ const ComponentType &Tensor<ComponentType>::operator[](const size_t &idx) const 
 
 template<Arithmetic ComponentType>
 size_t Tensor<ComponentType>::_calculateIndex(const std::vector<size_t> &idx) const {
-    size_t index = 0;
-    for (auto currentIndex = idx.begin(), multiplier = _indexing.begin();
-         currentIndex != idx.end() && multiplier != _indexing.end(); ++currentIndex, ++multiplier) {
-        index += *currentIndex * *multiplier;
-    }
+    size_t index = std::inner_product(idx.begin(), idx.end(), _indexing.begin(), static_cast<size_t >(0));
     return index;
 }
 
