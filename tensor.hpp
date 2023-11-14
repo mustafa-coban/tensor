@@ -235,8 +235,7 @@ bool operator==(const Tensor<ComponentType> &a, const Tensor<ComponentType> &b) 
 template<Arithmetic ComponentType>
 std::ostream &
 operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
-    // TODO (optional): Implement some nice stdout printer for debugging/exercise.
-    std::vector<size_t> traverse(tensor.rank(), 0);
+
     std::vector<size_t> shape = tensor.shape();
 
     if (tensor.rank() == 0) {
@@ -261,9 +260,12 @@ operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
         return out;
     }
 
+    std::vector<size_t> traverse(tensor.rank(), 0);
+    const std::string deliminator(shape.back() * 2, '=');
+
     while (traverse.front() < shape.front()) {
         const size_t startIndex = shape.size() - 3;
-        std::string deliminator(shape.back() * 2, '=');
+
         // print matrix of tensor part with info
         // info is indexes before last two
         out << deliminator << std::endl;
@@ -276,7 +278,7 @@ operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
         for (size_t row = 0; row < shape.front(); ++row) {
             for (size_t col = 0; col < shape.back(); ++col) {
                 traverse.back() = col;
-                traverse[traverse.size()-2] = row;
+                traverse[traverse.size() - 2] = row;
                 out << tensor(traverse) << " ";
             }
             out << std::endl;
