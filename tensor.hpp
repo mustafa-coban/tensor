@@ -257,43 +257,42 @@ operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
         return out;
     }
 
-    std::vector<size_t> traverse(tensor.rank(), 0);
-    const std::string deliminator(shape.back() * 2, '=');
+    std::vector<size_t> matrixIndexes(tensor.rank(), 0);
+    const std::string horizontalLine(shape.back() * 2, '=');
 
-    while (traverse.front() < shape.front()) {
-        const size_t startIndex = shape.size() - 3;
+    while (matrixIndexes.front() < shape.front()) {
+        const size_t startOfMatrix = shape.size() - 3;
 
         // print matrix of tensor part with info
         // info is indexes before last two
-        out << deliminator << std::endl;
+        out << horizontalLine << std::endl;
         out << "{ ";
-        for (size_t i = 0; i <= startIndex; ++i) {
-            out << traverse[i] << " ";
+        for (size_t i = 0; i <= startOfMatrix; ++i) {
+            out << matrixIndexes[i] << " ";
         }
         out << "}" << std::endl;
         //matrix
         for (size_t row = 0; row < shape.front(); ++row) {
             for (size_t col = 0; col < shape.back(); ++col) {
-                traverse.back() = col;
-                traverse[traverse.size() - 2] = row;
-                out << tensor(traverse) << " ";
+                matrixIndexes.back() = col;
+                matrixIndexes[matrixIndexes.size() - 2] = row;
+                out << tensor(matrixIndexes) << " ";
             }
             out << std::endl;
         }
 
-        out << deliminator << std::endl;
+        out << horizontalLine << std::endl;
 
-        for (size_t last = startIndex; last <= startIndex;) {
-            traverse[last]++;
-            if (traverse[last] != shape[last]) {
+        for (size_t indexOfMatrix = startOfMatrix; indexOfMatrix <= startOfMatrix; indexOfMatrix--) {
+
+            ++matrixIndexes[indexOfMatrix];
+
+            if (matrixIndexes[indexOfMatrix] < shape[indexOfMatrix] || indexOfMatrix == 0) {
                 break;
             }
 
-            if (last == 0) {
-                break;
-            }
-            traverse[last] = 0;
-            last--;
+            matrixIndexes[indexOfMatrix] = 0;
+
         }
     }
     return out;
