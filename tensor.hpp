@@ -25,9 +25,6 @@ public:
     // Constructs a tensor with arbitrary shape and fills it with the specified value.
     explicit Tensor(const std::vector<size_t> &shape, const ComponentType &fillValue);
 
-    // Constructs a tensor with arbitrary shape and data.
-    explicit Tensor(const std::vector<size_t> &shape, const std::vector<ComponentType> &data);
-
     // Copy-constructor.
     Tensor(const Tensor<ComponentType> &other);
 
@@ -64,14 +61,6 @@ public:
 
     bool checkEqual(const Tensor<ComponentType> &other) const;
 
-    // Element access function
-    const ComponentType &
-    operator[](const size_t &idx) const;
-
-    // Element mutation function
-    ComponentType &
-    operator[](const size_t &idx);
-
 private:
     std::vector<size_t> _shape;
     std::vector<ComponentType> _data;
@@ -82,16 +71,6 @@ private:
     void _fillIndexing();
 };
 
-template<Arithmetic ComponentType>
-Tensor<ComponentType>::Tensor(const std::vector<size_t> &shape, const std::vector<ComponentType> &data): _shape(
-        shape.begin(), shape.end()),
-                                                                                                         _data(data),
-                                                                                                         _indexing(
-                                                                                                                 shape) {
-
-    _data = data;
-    this->_fillIndexing();
-}
 
 template<Arithmetic ComponentType>
 bool Tensor<ComponentType>::checkEqual(const Tensor<ComponentType> &other) const {
@@ -197,16 +176,6 @@ ComponentType &Tensor<ComponentType>::operator()(const std::vector<size_t> &idx)
 }
 
 template<Arithmetic ComponentType>
-ComponentType &Tensor<ComponentType>::operator[](const size_t &idx) {
-    return _data[idx];
-}
-
-template<Arithmetic ComponentType>
-const ComponentType &Tensor<ComponentType>::operator[](const size_t &idx) const {
-    return _data[idx];
-}
-
-template<Arithmetic ComponentType>
 size_t Tensor<ComponentType>::_calculateIndex(const std::vector<size_t> &idx) const {
     size_t index = std::inner_product(idx.begin(), idx.end(), _indexing.begin(), static_cast<size_t >(0));
     return index;
@@ -241,7 +210,7 @@ operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
 
     if (tensor.rank() == 1) {
         for (size_t i = 0; i < shape.front(); ++i) {
-            out << tensor[i] << " ";
+            out << tensor({i}) << " ";
         }
         out << std::endl;
         return out;
@@ -272,7 +241,7 @@ operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
         }
         out << "}" << std::endl;
         //matrix
-        for (size_t row = 0; row < shape.front(); ++row) {
+        for (size_t row = 0; row < shape[startOfMatrix + 1]; ++row) {
             for (size_t col = 0; col < shape.back(); ++col) {
                 matrixIndexes.back() = col;
                 matrixIndexes[matrixIndexes.size() - 2] = row;
@@ -314,16 +283,32 @@ Tensor<ComponentType> readTensorFromFile(const std::string &filename) {
     for (auto &element: shape) {
         ifs >> element;
     }
+    Tensor<ComponentType> tensor(shape);
 
-    size_t numElements = 1;
-    for (auto &element: shape) {
-        numElements *= element;
+    std::vector<size_t> vectorIndexes(tensor.rank(), 0);
+
+    const size_t startOfVectors = shape.size() - 1;
+
+    while (vectorIndexes.front() < shape.front()) {
+
+        //vector
+        for (vectorIndexes.back() = 0; vectorIndexes.back() < shape.back(); ++vectorIndexes.back()) {
+            ifs >> tensor(vectorIndexes);
+        }
+
+        for (size_t indexOfMatrix = startOfVectors; indexOfMatrix <= startOfVectors; indexOfMatrix--) {
+
+            ++vectorIndexes[indexOfMatrix];
+
+            if (vectorIndexes[indexOfMatrix] < shape[indexOfMatrix] || indexOfMatrix == 0) {
+                break;
+            }
+
+            vectorIndexes[indexOfMatrix] = 0;
+
+        }
     }
-    std::vector<ComponentType> data(numElements);
-    for (auto &element: data) {
-        ifs >> element;
-    }
-    Tensor<ComponentType> tensor(shape, data);
+
     return tensor;
 }
 
@@ -345,9 +330,28 @@ void writeTensorToFile(const Tensor<ComponentType> &tensor, const std::string &f
         ofs << element << std::endl;
     }
 
-    int size = tensor.numElements();
-    for (int i = 0; i < size; ++i) {
-        ofs << tensor[i] << std::endl;
+    std::vector<size_t> vectorIndexes(tensor.rank(), 0);
+
+    const size_t startOfVectors = shape.size() - 1;
+
+    while (vectorIndexes.front() < shape.front()) {
+
+        //vector
+        for (vectorIndexes.back() = 0; vectorIndexes.back() < shape.back(); ++vectorIndexes.back()) {
+            ofs << tensor(vectorIndexes) << std::endl;
+        }
+
+        for (size_t indexOfMatrix = startOfVectors; indexOfMatrix <= startOfVectors; indexOfMatrix--) {
+
+            ++vectorIndexes[indexOfMatrix];
+
+            if (vectorIndexes[indexOfMatrix] < shape[indexOfMatrix] || indexOfMatrix == 0) {
+                break;
+            }
+
+            vectorIndexes[indexOfMatrix] = 0;
+
+        }
     }
 
 }
