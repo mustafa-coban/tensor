@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <iostream>
@@ -61,6 +60,9 @@ public:
 
     bool checkEqual(const Tensor<ComponentType> &other) const;
 
+    static Tensor<ComponentType> readFromFile(const std::string &filename);
+
+    void writeToFile(const std::string &filename) const ;
 private:
     std::vector<size_t> _shape;
     std::vector<ComponentType> _data;
@@ -72,16 +74,6 @@ private:
 };
 
 
-template<Arithmetic ComponentType>
-bool Tensor<ComponentType>::checkEqual(const Tensor<ComponentType> &other) const {
-    if (_shape != other._shape) {
-        return false;
-    }
-    if (_data != other._data) {
-        return false;
-    }
-    return true;
-}
 
 
 template<Arithmetic ComponentType>
@@ -127,6 +119,7 @@ Tensor<ComponentType>::Tensor(Tensor<ComponentType> &&other) noexcept {
 
 template<Arithmetic ComponentType>
 Tensor<ComponentType> &Tensor<ComponentType>::operator=(const Tensor<ComponentType> &other) {
+    if (this == &other) return *this;
     _shape = other.shape();
     _data = other._data;
     _indexing = other._indexing;
@@ -195,6 +188,62 @@ template<Arithmetic ComponentType>
 bool operator==(const Tensor<ComponentType> &a, const Tensor<ComponentType> &b) {
     return a.checkEqual(b);
 }
+
+template<Arithmetic ComponentType>
+bool Tensor<ComponentType>::checkEqual(const Tensor<ComponentType> &other) const {
+    if (_shape != other._shape) {
+        return false;
+    }
+    if (_data != other._data) {
+        return false;
+    }
+    return true;
+}
+
+template<Arithmetic ComponentType>
+Tensor<ComponentType> Tensor<ComponentType>::readFromFile(const std::string &filename) {
+    std::ifstream ifs(filename, std::ifstream::in);
+
+    if (!ifs.is_open()) {
+        std::cerr << "Error opening file." << filename << std::endl;
+        exit(1);
+    }
+
+    size_t rank;
+    ifs >> rank;
+    std::vector<size_t> shape(rank);
+    for (auto &element: shape) {
+        ifs >> element;
+    }
+    Tensor<ComponentType> tensor(shape);
+
+    for (auto &element : tensor._data) {
+        ifs >> element;
+    }
+
+    return tensor;
+}
+
+template<Arithmetic ComponentType>
+void Tensor<ComponentType>::writeToFile(const std::string &filename) const {
+    std::ofstream ofs(filename, std::ofstream::out);
+
+    if (!ofs.is_open()) {
+        std::cerr << "Error opening file " << filename << std::endl;
+        exit(1);
+    }
+
+    ofs << this->rank() << std::endl;
+
+    for (auto &element: _shape) {
+        ofs << element << std::endl;
+    }
+
+    for (auto &element : _data) {
+        ofs << element << std::endl;
+    }
+}
+
 
 // Pretty-prints the tensor to stdout.
 // This is not necessary (and not covered by the tests) but nice to have, also for debugging (and for exercise of course...).
@@ -270,88 +319,11 @@ operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
 // Reads a tensor from file.
 template<Arithmetic ComponentType>
 Tensor<ComponentType> readTensorFromFile(const std::string &filename) {
-    std::ifstream ifs(filename, std::ifstream::in);
-
-    if (!ifs.is_open()) {
-        std::cerr << "Error opening file." << filename << std::endl;
-        exit(1);
-    }
-
-    size_t rank;
-    ifs >> rank;
-    std::vector<size_t> shape(rank);
-    for (auto &element: shape) {
-        ifs >> element;
-    }
-    Tensor<ComponentType> tensor(shape);
-
-    std::vector<size_t> vectorIndexes(tensor.rank(), 0);
-
-    const size_t startOfVectors = shape.size() - 1;
-
-    while (vectorIndexes.front() < shape.front()) {
-
-        //vector
-        for (vectorIndexes.back() = 0; vectorIndexes.back() < shape.back(); ++vectorIndexes.back()) {
-            ifs >> tensor(vectorIndexes);
-        }
-
-        for (size_t indexOfMatrix = startOfVectors; indexOfMatrix <= startOfVectors; indexOfMatrix--) {
-
-            ++vectorIndexes[indexOfMatrix];
-
-            if (vectorIndexes[indexOfMatrix] < shape[indexOfMatrix] || indexOfMatrix == 0) {
-                break;
-            }
-
-            vectorIndexes[indexOfMatrix] = 0;
-
-        }
-    }
-
-    return tensor;
+    return Tensor<ComponentType>::readFromFile(filename);
 }
 
-// Writes a tensor to file.
+
 template<Arithmetic ComponentType>
 void writeTensorToFile(const Tensor<ComponentType> &tensor, const std::string &filename) {
-    std::ofstream ofs(filename, std::ofstream::out);
-
-    if (!ofs.is_open()) {
-        std::cerr << "Error opening file " << filename << std::endl;
-        exit(1);
-    }
-
-    ofs << tensor.rank() << std::endl;
-
-    std::vector<size_t> shape = tensor.shape();
-
-    for (auto &element: shape) {
-        ofs << element << std::endl;
-    }
-
-    std::vector<size_t> vectorIndexes(tensor.rank(), 0);
-
-    const size_t startOfVectors = shape.size() - 1;
-
-    while (vectorIndexes.front() < shape.front()) {
-
-        //vector
-        for (vectorIndexes.back() = 0; vectorIndexes.back() < shape.back(); ++vectorIndexes.back()) {
-            ofs << tensor(vectorIndexes) << std::endl;
-        }
-
-        for (size_t indexOfMatrix = startOfVectors; indexOfMatrix <= startOfVectors; indexOfMatrix--) {
-
-            ++vectorIndexes[indexOfMatrix];
-
-            if (vectorIndexes[indexOfMatrix] < shape[indexOfMatrix] || indexOfMatrix == 0) {
-                break;
-            }
-
-            vectorIndexes[indexOfMatrix] = 0;
-
-        }
-    }
-
+    tensor.writeToFile(filename);
 }

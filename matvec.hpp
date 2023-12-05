@@ -2,9 +2,8 @@
 
 #include "tensor.hpp"
 
-template< typename ComponentType >
-class Vector
-{
+template<typename ComponentType>
+class Vector {
 public:
     // Default-constructor.
     Vector() = default;
@@ -13,27 +12,27 @@ public:
     explicit Vector(size_t size);
 
     // Constructor for vector of certain size with constant fill-value.
-    Vector(size_t size, const ComponentType& fillValue);
+    Vector(size_t size, const ComponentType &fillValue);
 
     // Constructing vector from file.
-    Vector(const std::string& filename);
+    Vector(const std::string &filename);
 
     // Number of elements in this vector.
     [[nodiscard]] size_t size() const;
 
     // Element access function
-    const ComponentType&
+    const ComponentType &
     operator()(size_t idx) const;
 
     // Element mutation function
-    ComponentType&
+    ComponentType &
     operator()(size_t idx);
 
     // Reference to internal tensor.
-    Tensor< ComponentType >& tensor();
+    Tensor<ComponentType> &tensor();
 
 private:
-    Tensor< ComponentType > tensor_;
+    Tensor<ComponentType> tensor_;
 };
 
 template<typename ComponentType>
@@ -71,9 +70,8 @@ Tensor<ComponentType> &Vector<ComponentType>::tensor() {
     return tensor_;
 }
 
-template< typename ComponentType >
-class Matrix
-{
+template<typename ComponentType>
+class Matrix {
 public:
     // Default-constructor.
     Matrix() = default;
@@ -82,10 +80,10 @@ public:
     explicit Matrix(size_t rows, size_t cols);
 
     // Constructor for matrix of certain size with constant fill-value.
-    Matrix(size_t rows, size_t cols, const ComponentType& fillValue);
+    Matrix(size_t rows, size_t cols, const ComponentType &fillValue);
 
     // Constructing matrix from file.
-    Matrix(const std::string& filename);
+    Matrix(const std::string &filename);
 
     // Number of rows.
     [[nodiscard]] size_t rows() const;
@@ -94,19 +92,22 @@ public:
     [[nodiscard]] size_t cols() const;
 
     // Element access function
-    const ComponentType&
+    const ComponentType &
     operator()(size_t row, size_t col) const;
 
     // Element mutation function
-    ComponentType&
+    ComponentType &
     operator()(size_t row, size_t col);
 
     // Reference to internal tensor.
-    Tensor< ComponentType >& tensor();
+    Tensor<ComponentType> &tensor();
 
+    // Overload * operator for Matrix Vector multiplication
+    Vector<ComponentType> operator* (const Vector<ComponentType>& vector) const;
 private:
-    Tensor< ComponentType > tensor_;
+    Tensor<ComponentType> tensor_;
 };
+
 
 template<typename ComponentType>
 Matrix<ComponentType>::Matrix(size_t rows, size_t cols): tensor_({rows, cols}) {
@@ -114,13 +115,14 @@ Matrix<ComponentType>::Matrix(size_t rows, size_t cols): tensor_({rows, cols}) {
 }
 
 template<typename ComponentType>
-Matrix<ComponentType>::Matrix(size_t rows, size_t cols, const ComponentType &fillValue): tensor_({rows, cols}, fillValue) {
+Matrix<ComponentType>::Matrix(size_t rows, size_t cols, const ComponentType &fillValue): tensor_({rows, cols},
+                                                                                                 fillValue) {
 
 }
 
 template<typename ComponentType>
 Matrix<ComponentType>::Matrix(const std::string &filename) {
-   tensor_ = readTensorFromFile<ComponentType>(filename);
+    tensor_ = readTensorFromFile<ComponentType>(filename);
 }
 
 template<typename ComponentType>
@@ -148,21 +150,23 @@ Tensor<ComponentType> &Matrix<ComponentType>::tensor() {
     return tensor_;
 }
 
-
-
-
-// Performs a matrix-vector multiplication.
-template< typename ComponentType >
-Vector< ComponentType > matvec(const Matrix< ComponentType >& mat, const Vector< ComponentType >& vec)
-{
+template<typename ComponentType>
+Vector<ComponentType> Matrix<ComponentType>::operator*(const Vector<ComponentType> &vec) const{
+    assert(this->cols() == vec.size());
     Vector<ComponentType> result(vec.size());
-    for (size_t row = 0; row < mat.rows(); ++row) {
+    for (size_t row = 0; row < this->rows(); ++row) {
         ComponentType temp = 0;
         for (size_t col = 0; col < vec.size(); ++col) {
-            temp += mat(row,col) * vec(col);
+            temp += (*this)(row, col) * vec(col);
         }
         result(row) = temp;
     }
     return result;
+}
+
+// Performs a matrix-vector multiplication.
+template<typename ComponentType>
+Vector<ComponentType> matvec(const Matrix<ComponentType> &mat, const Vector<ComponentType> &vec) {
+    return mat * vec;
 }
 
