@@ -26,6 +26,8 @@ void test_matvec(std::vector< std::pair< bool, std::string > >& results)
 
     auto y_comp = matvec(A, x);
 
+    std::cout << y_comp.tensor() << std::endl;
+
     results.push_back({y_comp.tensor() == y_read.tensor(), "test_matvec: result equal to file"});
 }
 

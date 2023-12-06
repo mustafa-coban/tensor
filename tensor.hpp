@@ -19,7 +19,7 @@ public:
     Tensor();
 
     // Constructs a tensor with arbitrary shape and zero-initializes all elements.
-    Tensor(const std::vector<size_t> &shape);
+    explicit Tensor(const std::vector<size_t> &shape);
 
     // Constructs a tensor with arbitrary shape and fills it with the specified value.
     explicit Tensor(const std::vector<size_t> &shape, const ComponentType &fillValue);
@@ -62,7 +62,23 @@ public:
 
     static Tensor<ComponentType> readFromFile(const std::string &filename);
 
-    void writeToFile(const std::string &filename) const ;
+    void writeToFile(const std::string &filename) const;
+
+    // Element access function
+    const ComponentType &
+    operator[](const size_t &idx) const;
+
+    // Element mutation function
+    ComponentType &
+    operator[](const size_t &idx);
+
+    // Returns vector iterator for index
+    [[nodiscard]] std::vector<ComponentType>::iterator getIterator(const size_t &idx);
+
+    // Returns vector iterator for index
+    [[nodiscard]] std::vector<ComponentType>::const_iterator getIterator(const size_t &idx) const;
+
+
 private:
     std::vector<size_t> _shape;
     std::vector<ComponentType> _data;
@@ -72,8 +88,6 @@ private:
 
     void _fillIndexing();
 };
-
-
 
 
 template<Arithmetic ComponentType>
@@ -217,7 +231,7 @@ Tensor<ComponentType> Tensor<ComponentType>::readFromFile(const std::string &fil
     }
     Tensor<ComponentType> tensor(shape);
 
-    for (auto &element : tensor._data) {
+    for (auto &element: tensor._data) {
         ifs >> element;
     }
 
@@ -239,11 +253,32 @@ void Tensor<ComponentType>::writeToFile(const std::string &filename) const {
         ofs << element << std::endl;
     }
 
-    for (auto &element : _data) {
+    for (auto &element: _data) {
         ofs << element << std::endl;
     }
 }
 
+template<Arithmetic ComponentType>
+inline const ComponentType &Tensor<ComponentType>::operator[](const size_t &idx) const {
+    return _data[idx];
+}
+
+template<Arithmetic ComponentType>
+inline ComponentType &Tensor<ComponentType>::operator[](const size_t &idx) {
+    return _data[idx];
+}
+
+template<Arithmetic ComponentType>
+std::vector<ComponentType>::iterator
+Tensor<ComponentType>::getIterator(const size_t &idx) {
+    return _data.begin() + idx;
+}
+
+template<Arithmetic ComponentType>
+std::vector<ComponentType>::const_iterator
+Tensor<ComponentType>::getIterator(const size_t &idx) const {
+    return _data.begin() + idx;
+}
 
 // Pretty-prints the tensor to stdout.
 // This is not necessary (and not covered by the tests) but nice to have, also for debugging (and for exercise of course...).

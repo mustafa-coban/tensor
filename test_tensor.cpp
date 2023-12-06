@@ -21,11 +21,11 @@ void test_constructor(std::vector< std::pair< bool, std::string > >& results)
     Tensor< int > c({3, 5, 8}, 42);
     Tensor< int > d({3, 5, 8, 6, 2, 8, 2, 7, 7, 8}, 42);
 
-    results.push_back({c.numElements() == 3 * 5 * 8, "test_constructor: correct number of elements"});
-    results.push_back({a({}) == 0, "test_constructor: correct initialization"});
-    results.push_back({b({2, 1, 1}) == 0, "test_constructor: correct initialization"});
-    results.push_back({c({2, 1, 1}) == 42, "test_constructor: correct initialization"});
-    results.push_back({d.rank() == 10, "test_constructor: correct rank"});
+    results.emplace_back(c.numElements() == 3 * 5 * 8, "test_constructor: correct number of elements");
+    results.emplace_back(a({}) == 0, "test_constructor: correct initialization");
+    results.emplace_back(b({2, 1, 1}) == 0, "test_constructor: correct initialization");
+    results.emplace_back(c({2, 1, 1}) == 42, "test_constructor: correct initialization");
+    results.emplace_back(d.rank() == 10, "test_constructor: correct rank");
 
     Tensor< float > e;
     Tensor< double > f({4, 5, 6, 7});
@@ -107,6 +107,16 @@ void test_print()
     std::cout << a << b << c << d;
 }
 
+void test_getIterator(std::vector< std::pair< bool, std::string > >& results)
+{
+    auto a = readTensorFromFile<int>("data/tensor_02");
+    auto it = a.getIterator(1);
+    results.push_back({*(a.getIterator(2)) == 3, "test_iterator_1 correct"});
+    results.push_back({*it == 2, "test_iterator_2 correct"});
+    it += 2;
+    results.push_back({*it == 4, "test_iterator_2 correct"});
+}
+
 int main()
 {
     std::vector< std::pair< bool, std::string > > results;
@@ -116,6 +126,7 @@ int main()
     test_access(results);
     test_fileio(results);
     test_print();
+    test_getIterator(results);
     size_t passed = 0;
     for (auto [condition, msg] : results)
     {
