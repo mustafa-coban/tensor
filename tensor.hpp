@@ -20,7 +20,7 @@ public:
     using value_type = ComponentType;
     using difference_type = std::ptrdiff_t;
     using pointer = ComponentType *;
-    using reference = ComponentType &;
+    using reference = typename std::iterator_traits<IteratorType>::reference;
 
     Iterator(IteratorType it, int alignment) : _it(it), _alignment(alignment) {}
 
@@ -52,12 +52,8 @@ public:
         return _it != other._it;
     }
 
-    ComponentType &operator*() {
-        return *_it;
-    }
 
-
-    const ComponentType operator*() const {
+    reference &operator*() {
         return *_it;
     }
 

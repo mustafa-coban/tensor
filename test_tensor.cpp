@@ -131,7 +131,7 @@ void test_getIterator(std::vector< std::pair< bool, std::string > >& results)
     const auto b = readTensorFromFile<int>("data/tensor_02");
     auto it5 = b.begin({});
     it5++;
-    results.emplace_back(a({0,1}) == *it5, "test_iterator_9 correct");
+    results.emplace_back(b({0,0,1}) == *it5, "test_iterator_9 correct");
 }
 
 int main()
