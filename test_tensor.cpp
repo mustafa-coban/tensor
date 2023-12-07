@@ -38,20 +38,20 @@ void test_move(std::vector< std::pair< bool, std::string > >& results)
         Tensor< int > a({2, 2, 2}, 2);
         auto b = a;
 
-        results.push_back({a == b, "test_move: copy-assignment"});
+        results.emplace_back(a == b, "test_move: copy-assignment");
 
         auto c = std::move(a);
         Tensor< int > d;
 
-        results.push_back({a == d, "test_move: correct state after move"});
-        results.push_back({c == b, "test_move: move succeeded"});
+        results.emplace_back(a == d, "test_move: correct state after move");
+        results.emplace_back(c == b, "test_move: move succeeded");
 
         a = b;
         Tensor< int > e(std::move(a));
         Tensor< int > f;
 
-        results.push_back({a == f, "test_move: correct state after move"});
-        results.push_back({e == b, "test_move: move succeeded"});
+        results.emplace_back(a == f, "test_move: correct state after move");
+        results.emplace_back(e == b, "test_move: move succeeded");
     }
 }
 
@@ -59,17 +59,17 @@ void test_access(std::vector< std::pair< bool, std::string > >& results)
 {
     Tensor< int > a;
     a({}) = 444;
-    results.push_back({a({}) == 444, "test_constructor: correct access rank 0"});
+    results.emplace_back(a({}) == 444, "test_constructor: correct access rank 0");
 }
 
 void test_fileio(std::vector< std::pair< bool, std::string > >& results)
 {
     auto a = readTensorFromFile< int >("data/tensor_01");
-    results.push_back({a.rank() == 2, "test_io: tensor 01 correct rank"});
-    results.push_back({a({0, 0}) == 1, "test_io: tensor 01 correct entry"});
-    results.push_back({a({0, 1}) == 0, "test_io: tensor 01 correct entry"});
-    results.push_back({a({1, 0}) == 0, "test_io: tensor 01 correct entry"});
-    results.push_back({a({1, 1}) == -1, "test_io: tensor 01 correct entry"});
+    results.emplace_back(a.rank() == 2, "test_io: tensor 01 correct rank");
+    results.emplace_back(a({0, 0}) == 1, "test_io: tensor 01 correct entry");
+    results.emplace_back(a({0, 1}) == 0, "test_io: tensor 01 correct entry");
+    results.emplace_back(a({1, 0}) == 0, "test_io: tensor 01 correct entry");
+    results.emplace_back(a({1, 1}) == -1, "test_io: tensor 01 correct entry");
 
     Tensor< int > b({2, 2, 2});
     b({0, 0, 0}) = 1;
@@ -84,18 +84,18 @@ void test_fileio(std::vector< std::pair< bool, std::string > >& results)
     writeTensorToFile< int >(b, "data/tensor_out");
     auto c = readTensorFromFile< int >("data/tensor_out");
 
-    results.push_back({c({0, 0, 0}) == 1, "test_io: tensor write correct entry"});
-    results.push_back({c({0, 0, 1}) == 2, "test_io: tensor write correct entry"});
-    results.push_back({c({0, 1, 0}) == 3, "test_io: tensor write correct entry"});
-    results.push_back({c({0, 1, 1}) == 4, "test_io: tensor write correct entry"});
-    results.push_back({c({1, 0, 0}) == 5, "test_io: tensor write correct entry"});
-    results.push_back({c({1, 0, 1}) == 6, "test_io: tensor write correct entry"});
-    results.push_back({c({1, 1, 0}) == 7, "test_io: tensor write correct entry"});
-    results.push_back({c({1, 1, 1}) == 8, "test_io: tensor write correct entry"});
+    results.emplace_back(c({0, 0, 0}) == 1, "test_io: tensor write correct entry");
+    results.emplace_back(c({0, 0, 1}) == 2, "test_io: tensor write correct entry");
+    results.emplace_back(c({0, 1, 0}) == 3, "test_io: tensor write correct entry");
+    results.emplace_back(c({0, 1, 1}) == 4, "test_io: tensor write correct entry");
+    results.emplace_back(c({1, 0, 0}) == 5, "test_io: tensor write correct entry");
+    results.emplace_back(c({1, 0, 1}) == 6, "test_io: tensor write correct entry");
+    results.emplace_back(c({1, 1, 0}) == 7, "test_io: tensor write correct entry");
+    results.emplace_back(c({1, 1, 1}) == 8, "test_io: tensor write correct entry");
 
     auto d = readTensorFromFile< int >("data/tensor_02");
 
-    results.push_back({c == d, "test_io: tensor read/write correct"});
+    results.emplace_back(c == d, "test_io: tensor read/write correct");
 }
 
 void test_print()
@@ -111,10 +111,27 @@ void test_getIterator(std::vector< std::pair< bool, std::string > >& results)
 {
     auto a = readTensorFromFile<int>("data/tensor_02");
     auto it = a.begin({});
-    results.push_back({*it != 3, "test_iterator_1 correct"});
-    results.push_back({*it == 1, "test_iterator_2 correct"});
+    auto it2 = a.begin({0,1,-1});
+    results.emplace_back(*it != 3, "test_iterator_1 correct");
+    results.emplace_back(*it2 == 3, "test_iterator_2 correct");
+    results.emplace_back(*it == 1, "test_iterator_3 correct");
     it++;
-    results.push_back({*it == 2, "test_iterator_2 correct"});
+    results.emplace_back(*it == 2, "test_iterator_4 correct");
+    it2++;
+    results.emplace_back(*it2 == 4, "test_iterator_5 correct");
+    it2++;
+    auto it3 = a.end({0,1,-1});
+    results.emplace_back(it2 == it3, "test_iterator_6 correct");
+    auto it4 = a.begin({0,0,-1});
+    *it4 = 5;
+    results.emplace_back(a({0, 0, 0}) == 5, "test_iterator_7 correct");
+    it4++;
+    *it4 = 6;
+    results.emplace_back(a({0, 0, 1}) == 6, "test_iterator_8 correct");
+    const auto b = readTensorFromFile<int>("data/tensor_02");
+    auto it5 = b.begin({});
+    it5++;
+    results.emplace_back(a({0,1}) == *it5, "test_iterator_9 correct");
 }
 
 int main()

@@ -52,11 +52,12 @@ public:
         return _it != other._it;
     }
 
-    ComponentType &operator*() const {
+    ComponentType &operator*() {
         return *_it;
     }
 
-    const ComponentType &operator*() {
+
+    const ComponentType operator*() const {
         return *_it;
     }
 
@@ -324,7 +325,8 @@ void Tensor<ComponentType>::writeToFile(const std::string &filename) const {
 }
 
 template<Arithmetic ComponentType>
-Iterator<ComponentType, typename std::vector<ComponentType>::iterator> Tensor<ComponentType>::begin(const std::vector<int> &idx) {
+Iterator<ComponentType, typename std::vector<ComponentType>::iterator>
+Tensor<ComponentType>::begin(const std::vector<int> &idx) {
     if (idx.empty()) {
         return Iterator<ComponentType, typename std::vector<ComponentType>::iterator>(_data.begin(), 1);
     }
@@ -333,11 +335,13 @@ Iterator<ComponentType, typename std::vector<ComponentType>::iterator> Tensor<Co
     size_t position = std::distance(idx.begin(), std::find(idx.begin(), idx.end(), -1));
 
     auto it = _data.begin() + this->_calculateIndex(idx) + _indexing[position];
-    return Iterator<ComponentType, typename std::vector<ComponentType>::iterator>(it, _indexing[position]);
+    return Iterator<ComponentType, typename std::vector<ComponentType>::iterator>(it,
+                                                                                  static_cast<int>(_indexing[position]));
 }
 
 template<Arithmetic ComponentType>
-Iterator<ComponentType, typename std::vector<ComponentType>::iterator> Tensor<ComponentType>::end(const std::vector<int> &idx) {
+Iterator<ComponentType, typename std::vector<ComponentType>::iterator>
+Tensor<ComponentType>::end(const std::vector<int> &idx) {
     if (idx.empty()) {
         return Iterator<ComponentType, typename std::vector<ComponentType>::iterator>(_data.end(), 1);
     }
@@ -347,11 +351,13 @@ Iterator<ComponentType, typename std::vector<ComponentType>::iterator> Tensor<Co
 
     auto it =
             _data.begin() + this->_calculateIndex(idx) + _indexing[position] + (_indexing[position] * _shape[position]);
-    return Iterator<ComponentType, typename std::vector<ComponentType>::iterator>(it, _indexing[position]);
+    return Iterator<ComponentType, typename std::vector<ComponentType>::iterator>(it,
+                                                                                  static_cast<int>(_indexing[position]));
 }
 
 template<Arithmetic ComponentType>
-Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator> Tensor<ComponentType>::begin(const std::vector<int> &idx) const {
+Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>
+Tensor<ComponentType>::begin(const std::vector<int> &idx) const {
     if (idx.empty()) {
         return Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>(_data.begin(), 1);
     }
@@ -360,11 +366,13 @@ Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator> Ten
     size_t position = std::distance(idx.begin(), std::find(idx.begin(), idx.end(), -1));
 
     auto it = _data.begin() + this->_calculateIndex(idx) + _indexing[position];
-    return Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>(it, _indexing[position]);
+    return Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>(it,
+                                                                                        static_cast<int>(_indexing[position]));
 }
 
 template<Arithmetic ComponentType>
-Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator> Tensor<ComponentType>::end(const std::vector<int> &idx) const {
+Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>
+Tensor<ComponentType>::end(const std::vector<int> &idx) const {
     if (idx.empty()) {
         return Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>(_data.end(), 1);
     }
@@ -374,7 +382,8 @@ Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator> Ten
 
     auto it =
             _data.begin() + this->_calculateIndex(idx) + _indexing[position] + (_indexing[position] * _shape[position]);
-    return Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>(it, _indexing[position]);
+    return Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>(it,
+                                                                                        static_cast<int>(_indexing[position]));
 }
 
 // Pretty-prints the tensor to stdout.
