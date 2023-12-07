@@ -110,11 +110,11 @@ void test_print()
 void test_getIterator(std::vector< std::pair< bool, std::string > >& results)
 {
     auto a = readTensorFromFile<int>("data/tensor_02");
-    auto it = a.getIterator(1);
-    results.push_back({*(a.getIterator(2)) == 3, "test_iterator_1 correct"});
+    auto it = a.begin({});
+    results.push_back({*it != 3, "test_iterator_1 correct"});
+    results.push_back({*it == 1, "test_iterator_2 correct"});
+    it++;
     results.push_back({*it == 2, "test_iterator_2 correct"});
-    it += 2;
-    results.push_back({*it == 4, "test_iterator_2 correct"});
 }
 
 int main()
