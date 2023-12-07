@@ -54,7 +54,7 @@ Vector<ComponentType>::Vector(size_t size, const ComponentType &fillValue) {
 
 template<typename ComponentType>
 Vector<ComponentType>::Vector(const std::string &filename) {
-    _tensor = readTensorFromFile<ComponentType>(filename);
+    _tensor = Tensor<ComponentType>::readFromFile(filename);
 }
 
 template<typename ComponentType>

@@ -118,6 +118,10 @@ public:
 
     void writeToFile(const std::string &filename) const;
 
+    // Reshape the tensor
+    // ** Invalidates all iterator acquired before ** undefined behaviour
+    void reshape(const std::vector<size_t> &newShape);
+
     // Iterator-related member functions
     using Iterator_type = Iterator<ComponentType, typename std::vector<ComponentType>::iterator>;
     using Const_Iterator_type = Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>;
@@ -145,6 +149,7 @@ private:
 
     void _fillIndexing();
 };
+
 
 template<Arithmetic ComponentType>
 Tensor<ComponentType>::Tensor() : _shape(1, 0), _data(1, 0), _indexing(1, 0) {
@@ -219,11 +224,7 @@ inline std::vector<size_t> Tensor<ComponentType>::shape() const {
 
 template<Arithmetic ComponentType>
 inline size_t Tensor<ComponentType>::numElements() const {
-    size_t _numElements = 1;
-    for (auto &element: _shape) {
-        _numElements *= element;
-    }
-    return _numElements;
+    return std::accumulate(_shape.begin(), _shape.end(), 1, std::multiplies<>());
 }
 
 template<Arithmetic ComponentType>
@@ -318,6 +319,13 @@ void Tensor<ComponentType>::writeToFile(const std::string &filename) const {
     for (auto &element: _data) {
         ofs << element << std::endl;
     }
+}
+
+template<Arithmetic ComponentType>
+void Tensor<ComponentType>::reshape(const std::vector<size_t> &newShape) {
+    assert(static_cast<size_t>(std::accumulate(newShape.begin(), newShape.end(), 1, std::multiplies<>())) == this->numElements());
+    _shape = newShape;
+    this->_fillIndexing();
 }
 
 template<Arithmetic ComponentType>

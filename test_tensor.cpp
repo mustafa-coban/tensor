@@ -134,6 +134,17 @@ void test_getIterator(std::vector< std::pair< bool, std::string > >& results)
     results.emplace_back(b({0,0,1}) == *it5, "test_iterator_9 correct");
 }
 
+void test_reshape(std::vector< std::pair< bool, std::string > >& results) {
+    auto a = Tensor<int>::readFromFile("data/tensor_02");
+    std::vector<size_t> newShape1 = {4,2};
+    a.reshape(newShape1);
+    results.emplace_back(a.shape() == newShape1, "reshape changed shaped correctly");
+    results.emplace_back(a({0,1}) == 2, "access after reshaped correctly");
+    std::vector<size_t> newShape2 = {8};
+    a.reshape({8});
+    results.emplace_back(a.shape() == newShape2, "reshape changed shaped correctly 2");
+    results.emplace_back(a({6}) == 7, "access after reshaped correctly 2");
+}
 int main()
 {
     std::vector< std::pair< bool, std::string > > results;
@@ -144,6 +155,7 @@ int main()
     test_fileio(results);
     test_print();
     test_getIterator(results);
+    test_reshape(results);
     size_t passed = 0;
     for (auto [condition, msg] : results)
     {
