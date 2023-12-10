@@ -396,69 +396,61 @@ template<Arithmetic ComponentType>
 std::ostream &
 operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
 
-    std::vector<size_t> shape = tensor.shape();
-
     if (tensor.rank() == 0) {
         return out;
     }
 
-    if (tensor.rank() == 1) {
-        for (size_t i = 0; i < shape.front(); ++i) {
-            out << tensor({i}) << " ";
+    std::vector<size_t> shape = tensor.shape();
+
+    out << "shape:(";
+    for (size_t element : shape)
+    {
+        out << element << ", ";
+    }
+    out << '\b' << '\b';
+    out << ")\n";
+
+    std::vector<size_t> multipliers;
+    for (size_t offset = 0; offset < shape.size(); offset++)
+    {
+        multipliers.push_back(std::accumulate(shape.begin() + offset, shape.end(), 1, std::multiplies<>()));
+    }
+    std::reverse(multipliers.begin(), multipliers.end());
+    size_t index = 0;
+    bool open_line = false;
+
+    out << std::string(shape.size(), '[');
+
+    for (auto it = tensor.begin({}); it != tensor.end({}); it++, index++)
+    {
+        out << *it << ", ";
+
+        for (size_t mindex = 0; mindex < multipliers.size() - 1; mindex++)
+        {
+
+            if ((index + 1) % multipliers[mindex] == 0 && (index + 1) % multipliers[mindex + 1] != 0)
+            {
+                if (!open_line)
+                    out << '\b' << '\b' << "]\n" << std::string(shape.size() - 1, ' ') << "[";
+                else
+                {
+                    out << '\b' << '\b' << "]" << std::string(mindex + 1, '\n') << ' '
+                        << std::string(shape.size() - (mindex + 2), ' ') << std::string(mindex + 1, '[');
+                    open_line = false;
+                }
+            }
+            if ((index + 1) % multipliers[mindex + 1] == 0)
+            {
+                out << '\b' << '\b' << "]  ";
+                open_line = true;
+            }
         }
-        out << std::endl;
-        return out;
     }
 
-    if (tensor.rank() == 2) {
-        for (size_t row = 0; row < shape.front(); ++row) {
-            for (size_t col = 0; col < shape.back(); ++col) {
-                out << tensor({row, col}) << " ";
-            }
-            out << std::endl;
-        }
-        return out;
-    }
-
-    std::vector<size_t> matrixIndexes(tensor.rank(), 0);
-    const std::string horizontalLine(shape.back() * 2, '=');
-
-    while (matrixIndexes.front() < shape.front()) {
-        const size_t startOfMatrix = shape.size() - 3;
-
-        // print matrix of tensor part with info
-        // info is indexes before last two
-        out << horizontalLine << std::endl;
-        out << "{ ";
-        for (size_t i = 0; i <= startOfMatrix; ++i) {
-            out << matrixIndexes[i] << " ";
-        }
-        out << "}" << std::endl;
-        //matrix
-        for (size_t row = 0; row < shape[startOfMatrix + 1]; ++row) {
-            for (size_t col = 0; col < shape.back(); ++col) {
-                matrixIndexes.back() = col;
-                matrixIndexes[matrixIndexes.size() - 2] = row;
-                out << tensor(matrixIndexes) << " ";
-            }
-            out << std::endl;
-        }
-
-        out << horizontalLine << std::endl;
-
-        for (size_t indexOfMatrix = startOfMatrix; indexOfMatrix <= startOfMatrix; indexOfMatrix--) {
-
-            ++matrixIndexes[indexOfMatrix];
-
-            if (matrixIndexes[indexOfMatrix] < shape[indexOfMatrix] || indexOfMatrix == 0) {
-                break;
-            }
-
-            matrixIndexes[indexOfMatrix] = 0;
-
-        }
-    }
+    out << '\b' << '\b' << "]\n";
     return out;
+
+
 }
 
 // Reads a tensor from file.
