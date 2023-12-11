@@ -67,7 +67,7 @@ private:
 template<Arithmetic ComponentType>
 class Tensor {
 public:
-    class iterator;
+
 
     // Constructs a tensor with rank = 0 and zero-initializes the element.
     Tensor();
@@ -323,7 +323,8 @@ void Tensor<ComponentType>::writeToFile(const std::string &filename) const {
 
 template<Arithmetic ComponentType>
 void Tensor<ComponentType>::reshape(const std::vector<size_t> &newShape) {
-    assert(static_cast<size_t>(std::accumulate(newShape.begin(), newShape.end(), 1, std::multiplies<>())) == this->numElements());
+    assert(static_cast<size_t>(std::accumulate(newShape.begin(), newShape.end(), 1, std::multiplies<>())) ==
+           this->numElements());
     _shape = newShape;
     this->_fillIndexing();
 }
@@ -403,16 +404,14 @@ operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
     std::vector<size_t> shape = tensor.shape();
 
     out << "shape:(";
-    for (size_t element : shape)
-    {
+    for (size_t element: shape) {
         out << element << ", ";
     }
     out << '\b' << '\b';
     out << ")\n";
 
     std::vector<size_t> multipliers;
-    for (size_t offset = 0; offset < shape.size(); offset++)
-    {
+    for (size_t offset = 0; offset < shape.size(); offset++) {
         multipliers.push_back(std::accumulate(shape.begin() + offset, shape.end(), 1, std::multiplies<>()));
     }
     std::reverse(multipliers.begin(), multipliers.end());
@@ -421,26 +420,21 @@ operator<<(std::ostream &out, const Tensor<ComponentType> &tensor) {
 
     out << std::string(shape.size(), '[');
 
-    for (auto it = tensor.begin({}); it != tensor.end({}); it++, index++)
-    {
+    for (auto it = tensor.begin({}); it != tensor.end({}); it++, index++) {
         out << *it << ", ";
 
-        for (size_t mindex = 0; mindex < multipliers.size() - 1; mindex++)
-        {
+        for (size_t mindex = 0; mindex < multipliers.size() - 1; mindex++) {
 
-            if ((index + 1) % multipliers[mindex] == 0 && (index + 1) % multipliers[mindex + 1] != 0)
-            {
+            if ((index + 1) % multipliers[mindex] == 0 && (index + 1) % multipliers[mindex + 1] != 0) {
                 if (!open_line)
                     out << '\b' << '\b' << "]\n" << std::string(shape.size() - 1, ' ') << "[";
-                else
-                {
+                else {
                     out << '\b' << '\b' << "]" << std::string(mindex + 1, '\n') << ' '
                         << std::string(shape.size() - (mindex + 2), ' ') << std::string(mindex + 1, '[');
                     open_line = false;
                 }
             }
-            if ((index + 1) % multipliers[mindex + 1] == 0)
-            {
+            if ((index + 1) % multipliers[mindex + 1] == 0) {
                 out << '\b' << '\b' << "]  ";
                 open_line = true;
             }
