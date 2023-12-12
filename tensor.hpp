@@ -138,9 +138,17 @@ public:
     // Returns Iterator for end
     [[nodiscard]] Const_Iterator_type end(const std::vector<int> &idx) const;
 
+    // Returns underlying vector
+    [[nodiscard]] std::vector<ComponentType> &data();
+
+    // Returns underlying vector
+    [[nodiscard]] const std::vector<ComponentType> &data() const;
+
 private:
     std::vector<size_t> _shape;
     std::vector<ComponentType> _data;
+
+private:
     std::vector<size_t> _indexing;
 
     [[nodiscard]] size_t _calculateIndex(const std::vector<size_t> &idx) const;
@@ -389,6 +397,16 @@ Tensor<ComponentType>::end(const std::vector<int> &idx) const {
             _data.begin() + this->_calculateIndex(idx) + _indexing[position] + (_indexing[position] * _shape[position]);
     return Iterator<ComponentType, typename std::vector<ComponentType>::const_iterator>(it,
                                                                                         static_cast<int>(_indexing[position]));
+}
+
+template<Arithmetic ComponentType>
+inline std::vector<ComponentType> &Tensor<ComponentType>::data() {
+    return _data;
+}
+
+template<Arithmetic ComponentType>
+inline const std::vector<ComponentType> &Tensor<ComponentType>::data() const {
+    return _data;
 }
 
 // Pretty-prints the tensor to stdout.
